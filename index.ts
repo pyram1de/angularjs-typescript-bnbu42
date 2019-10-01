@@ -1,20 +1,50 @@
 // Import stylesheets
 import './index.css';
 import * as Rx from 'rxjs';
+import { debounce } from 'rxjs/operators';
+import { AwObservable } from './awObservable.ts';
 
 var router_refresh_delay = 1000;
   
-(function(angular, window) {
+(function(angular) {
   'use strict';
   window['ngapp'] = angular.module('ngapp', []);
   var app = window['ngapp'];
 
   app.controller(
     'MainController', 
-    function($scope, $location, $timeout) 
+    function($scope, $timeout) 
     {
-      $scope.$location = $location;
+      let textBoxChanges: Rx.Subject<string> = new Rx.Subject<string>();
+      let awtextBoxChanges = new AwObservable();
+      //console.log();
+      awtextBoxChanges = awtextBoxChanges.AwObservable()
+
       $scope.dave = "nothing";
+      $scope.modelChange = () => {
+        textBoxChanges.next($scope.textInput);
+        awtextBoxChanges.next($scope.textInput);
+      };
+
+
+      let changes = textBoxChanges.asObservable();
+
+      changes
+        .pipe(debounce(() => Rx.timer(2500)))
+        .subscribe((result) => {
+          $scope.status = "searching: " + result;
+           if(!$scope.$$phase) {
+            $scope.$apply();
+            $scope.$digest();
+          }
+        });
+
+      awtextBoxChanges.subscribe((data) => {
+        $scope.awstatus = data;
+      });
+
+
+
       console.log('main controller');
 
       let rxSub: Rx.Subject<string> = new Rx.Subject<string>();
@@ -23,6 +53,15 @@ var router_refresh_delay = 1000;
         $scope.dave = result;
         console.log('result: ', result);
         
+        if(!$scope.$$phase) {
+          $scope.$apply();
+          $scope.$digest();
+        }
+      }, () => {
+        console.log('err');
+      }, () => {
+        console.log("all done");
+        $scope.dave = "COMPLETE";
         if(!$scope.$$phase) {
           $scope.$apply();
           $scope.$digest();
@@ -41,18 +80,12 @@ var router_refresh_delay = 1000;
           rxSub.next('should not hit this');
       }, 10000);
 
+      window.setTimeout(() => {
+        console.log('going to complete now');
+        rxSub.complete();
+      }, 11000);
+
     }
   ); 
 
-
-  app.config(function($locationProvider) 
-  {
-    // configure html5 to get links working on jsfiddle
-    $locationProvider.html5Mode(true);
-  });
-
-console.log('hello');
-console.log('Rx', Rx);
-
-
-})(window['angular'], window);
+})(window['angular']);

@@ -1,6 +1,9 @@
 <div ng-app="ngapp">
 <div ng-controller="MainController">
-  <div>$location.path() = {{$location.path()}}</div>
   <div>Dave = {{dave}}</div>
+  <input type="text" placeholder="input some text" 
+  ng-change="modelChange()" ng-model="textInput" />
+  <div>{{status}}</div>
+  <div>{{awstatus}}</div>
 </div>
 </div>
