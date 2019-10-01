@@ -52,20 +52,11 @@ var router_refresh_delay = 1000;
       let subscription = rxSub.subscribe(result => {
         $scope.dave = result;
         console.log('result: ', result);
-        
-        if(!$scope.$$phase) {
-          $scope.$apply();
-          $scope.$digest();
-        }
       }, () => {
         console.log('err');
       }, () => {
         console.log("all done");
         $scope.dave = "COMPLETE";
-        if(!$scope.$$phase) {
-          $scope.$apply();
-          $scope.$digest();
-        }
       });
 
       rxSub.next('hello dave');
