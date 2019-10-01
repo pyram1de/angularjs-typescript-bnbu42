@@ -1,68 +1,58 @@
 // Import stylesheets
 import './index.css';
+import * as Rx from 'rxjs';
 
 var router_refresh_delay = 1000;
-
-(function(angular) {
+  
+(function(angular, window) {
   'use strict';
-  window['ngRouteExample'] = angular.module('ngRouteExample', ['ngRoute']);
-  var app = window['ngRouteExample'];
+  window['ngapp'] = angular.module('ngapp', []);
+  var app = window['ngapp'];
 
   app.controller(
     'MainController', 
-    function($scope, $route, $routeParams, $location) 
+    function($scope, $location, $timeout) 
     {
-      $scope.$route = $route;
       $scope.$location = $location;
-      $scope.$routeParams = $routeParams;
+      $scope.dave = "nothing";
+      console.log('main controller');
+
+      let rxSub: Rx.Subject<string> = new Rx.Subject<string>();
+
+      let subscription = rxSub.subscribe(result => {
+        $scope.dave = result;
+        console.log('result: ', result);
+        
+        if(!$scope.$$phase) {
+          $scope.$apply();
+          $scope.$digest();
+        }
+      });
+
+      rxSub.next('hello dave');
+
+      $timeout(() => {
+        rxSub.next('here i am again');
+      }, 5000);
+
+      // emulate calls outside of the angular framework
+      window.setTimeout(() => {
+          console.log('hahaha', 'got ya');
+          rxSub.next('should not hit this');
+      }, 10000);
+
     }
   ); 
 
-  app.controller(
-    'BookController', 
-    function($scope, $routeParams) 
-    {
-      $scope.name = 'BookController';
-      $scope.params = $routeParams;
-    }
-  );
 
-  app.controller(
-    'ChapterController', 
-    function($scope, $routeParams) 
-    {
-      $scope.name = 'ChapterController';
-      $scope.params = $routeParams;
-    }
-  );
-
-  app.config(function($routeProvider, $locationProvider) 
+  app.config(function($locationProvider) 
   {
-    $routeProvider.when('/Book/:bookId', 
-    {
-      templateUrl: 'book.html',
-      controller: 'BookController',
-      resolve: {
-
-        delay: function($q, $timeout) 
-        {
-          var delay = $q.defer();
-          $timeout(delay.resolve, router_refresh_delay);
-          return delay.promise;
-        }
-      }
-    });
-
-    $routeProvider.when('/Book/:bookId/ch/:chapterId', 
-    {
-      templateUrl: 'chapter.html',
-      controller: 'ChapterController'
-    });
-
     // configure html5 to get links working on jsfiddle
     $locationProvider.html5Mode(true);
   });
 
+console.log('hello');
+console.log('Rx', Rx);
 
 
-})(window['angular']);
+})(window['angular'], window);
