@@ -16,7 +16,7 @@ var router_refresh_delay = 1000;
       $scope.$location = $location;
       $scope.$routeParams = $routeParams;
     }
-  );
+  ); 
 
   app.controller(
     'BookController', 
